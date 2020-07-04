@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS SAM template with a simple API definition
+Resources :
+  ApiGatewayRestApi :
+    Type : AWS::ApiGateway::RestApi
+    Properties:
+      Name:
+        Fn::Join:
+          - ""
+          - - Ref: AWS::StackName
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  ApiGatewayStreamResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGatewayRestApi
+      ParentId: !GetAtt 
+        - ApiGatewayRestApi
+        - RootResourceId
+      PathPart: '{stream-name}'
+
+  ApiGatewayPutMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: PUT
+      Integration:
+        Type: AWS 
+        Credentials:
+          Fn::GetAtt: [ ApiGatewayRole, Arn ]
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:aws:apigateway:"
+              - Ref: AWS::Region
+              - ":kinesis:action/PutRecord"
+        IntegrationHttpMethod: POST
+        RequestTemplates:
+          application/json:
+            Fn::Join:
+              - ""
+              - - "{\n" 
+                - "  \"StreamName\": \"$input.params('stream-name')"
+                - "\",\n"
+                - "  \"PartitionKey\": \"$input.path('$.PartitionKey')"
+                - "\",\n"
+                - "  \"Data\": \"$util.base64Encode($input.json('$.Data'))\""
+                - "\n}"
+        RequestParameters:
+          integration.request.header.Content-Type: "'x-amz-json-1.1'"
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseTemplates:
+              application/json: ""
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: Empty
+      ResourceId: !Ref ApiGatewayStreamResource
+      RestApiId: !Ref ApiGatewayRestApi
+
+  ApiGatewayRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: api-gateway-to-kinesis-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - apigateway.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: api-gateway-role-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+                - kinesis:PutRecord
+              Resource: !Join 
+                - ''
+                - - 'arn:aws:kinesis:'
+                  - !Ref 'AWS::Region'
+                  - ':'
+                  - !Ref 'AWS::AccountId'
+                  - ':stream/*'            
+
+  ApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - ApiGatewayPutMethod
+    Properties:
+      RestApiId: !Ref ApiGatewayRestApi
+      StageName: prod

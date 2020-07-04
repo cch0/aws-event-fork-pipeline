@@ -1,0 +1,216 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for creating Kinesis Data Stream, Kinesis Firehose Delivery Stream, 
+  Source Transformation Lambda and S3 Bucket.
+
+  This template enables sending events to Kinesis data stream and persist them into S3 bucket.
+
+Parameters:
+  DataStreamName:
+    Type: String
+    Default: raw-events
+  DeliveryStreamName:
+    Type: String
+    Default: raw-events
+  DeliveryStreamRoleName:
+    Type: String
+    Default: raw-events-firehose-delivery-role
+  FunctionName:
+    Type: String
+    Default: event-record-splitter
+  S3DeliveryErrorCloudWatchLogGroupName:
+    Type: String
+    Default: /aws/kinesisfirehose/raw-events
+
+Globals:
+  Function:
+    Timeout: 10
+
+Resources:
+  SplitterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      CodeUri: splitter/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+
+  DataStream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      Name: !Ref DataStreamName
+      ShardCount: 1
+
+  S3bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join 
+        - '-'
+        - - raw-events
+          - !Ref AWS::StackName
+      VersioningConfiguration:
+        Status: Suspended
+
+  DeliveryStreamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref DeliveryStreamRoleName
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: firehose.amazonaws.com
+            Action: 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                'sts:ExternalId': !Ref 'AWS::AccountId'
+      Path: "/"
+      Policies:
+        - PolicyName: firehose-delivery-stream-role
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:AbortMultipartUpload'
+                  - 's3:GetBucketLocation'
+                  - 's3:GetObject'
+                  - 's3:ListBucket'
+                  - 's3:ListBucketMultipartUploads'
+                  - 's3:PutObject'
+                Resource:
+                  - !Join 
+                    - ''
+                    - - 'arn:aws:s3:::'
+                      - !Ref S3bucket
+                  - !Join 
+                    - ''
+                    - - 'arn:aws:s3:::'
+                      - !Ref S3bucket
+                      - '/*'
+              - Effect: Allow
+                Action: 
+                  - 'logs:PutLogEvents'
+                Resource:
+                  - !Join 
+                    - ''
+                    - - 'arn:aws:logs:'
+                      - !Ref 'AWS::Region'
+                      - ':'
+                      - !Ref 'AWS::AccountId'
+                      - ':log-group:'
+                      - !Ref S3DeliveryErrorCloudWatchLogGroupName
+                      - ':log-stream:*'
+              - Effect: Allow
+                Action: 
+                  - 'kms:Decrypt'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'kinesis:DescribeStream'
+                  - 'kinesis:GetShardIterator'
+                  - 'kinesis:GetRecords'
+                  - 'kinesis:ListShards'
+                Resource: 
+                  - !Join 
+                    - ''
+                    - - 'arn:aws:kinesis:'
+                      - !Ref 'AWS::Region'
+                      - ':'
+                      - !Ref 'AWS::AccountId'
+                      - ':stream/'
+                      - !Ref DataStreamName
+    
+              - Effect: Allow
+                Action: 
+                  - 'lambda:InvokeFunction'
+                  - 'lambda:GetFunctionConfiguration'
+                Resource: 
+                  - !Join 
+                    - ''
+                    - - 'arn:aws:lambda:'
+                      - !Ref 'AWS::Region'
+                      - ':'
+                      - !Ref 'AWS::AccountId'
+                      - ':function:'
+                      - !Ref FunctionName
+
+  DeliveryStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties: 
+      DeliveryStreamName: !Ref DeliveryStreamName
+      DeliveryStreamType: KinesisStreamAsSource
+      KinesisStreamSourceConfiguration: 
+        KinesisStreamARN: !GetAtt DataStream.Arn
+        RoleARN: !GetAtt DeliveryStreamRole.Arn
+      ExtendedS3DestinationConfiguration:
+        RoleARN: !GetAtt DeliveryStreamRole.Arn
+        BucketARN: !Join 
+          - ''
+          - - 'arn:aws:s3:::'
+            - !Ref S3bucket
+        Prefix: raw/
+        ErrorOutputPrefix: processing-failed
+        BufferingHints:
+          SizeInMBs: 1
+          IntervalInSeconds: 60
+        CompressionFormat: UNCOMPRESSED
+        EncryptionConfiguration:
+          NoEncryptionConfig: NoEncryption
+        CloudWatchLoggingOptions:
+          Enabled: true
+          LogGroupName: !Ref S3DeliveryErrorCloudWatchLogGroupName
+          LogStreamName: S3Delivery
+        S3BackupMode: Disabled
+        ProcessingConfiguration:
+          Enabled: 'true'
+          Processors:
+            - Parameters:
+                - ParameterName: LambdaArn
+                  ParameterValue: !GetAtt SplitterFunction.Arn 
+              Type: Lambda
+
+
+Outputs:
+  SplitterFunctionName:
+    Description: Splitter function name
+    Value: !Ref SplitterFunction
+
+  SplitterFunctionARN:
+    Description: The ARN of the Splitter function
+    Value: !GetAtt SplitterFunction.Arn
+
+  DataStreamName:
+    Description: Kinesis data stream name
+    Value: !Ref DataStream
+
+  DataStreamARN:
+    Description: The ARN of the Kinesis data stream
+    Value: !GetAtt DataStream.Arn
+
+  S3BucketName:
+    Description: The S3 bucket name
+    Value: !Ref S3bucket 
+
+  S3BucketARN:
+    Description: The ARN of the S3 bucket
+    Value: !GetAtt S3bucket.Arn
+
+  DeliveryStreamRoleName:
+    Description: Firehose delivery role name
+    Value: !Ref DeliveryStreamRole
+
+  DeliveryStreamRoleARN:
+    Description: The ARN of the Firehose delivery role
+    Value: !GetAtt DeliveryStreamRole.Arn    
+
+  DeliveryStreamName:
+    Description: Kinesis Firehose delivery stream name
+    Value: !Ref DeliveryStream
+
+  DeliveryStreamARN:
+    Description: The ARN of the Firehose delivery stream
+    Value: !GetAtt DeliveryStream.Arn
