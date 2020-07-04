@@ -15,7 +15,7 @@ This project contains source code and supporting files for a serverless applicat
 - template.yaml - A template that defines the application's AWS resources.
 
 ## Goal
-The goal of this application is to build a event process pipeline starting from Kinesis Data Stream and using Firehose Delivery Stream to eventually store data in a S3 Bucket.
+The goal of this application is to build an event process pipeline starting from Kinesis Data Stream and using Firehose Delivery Stream to eventually store data in a S3 Bucket.
 
 - Kinesis Data Stream - which you can send events to using API Gateway
 - Kinesis Firehose Delivery Stream - which functions as the consumer of data stream and receives event data
