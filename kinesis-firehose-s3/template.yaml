@@ -32,7 +32,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Ref FunctionName
-      CodeUri: splitter/
+      CodeUri: s3://aws-sam-cch-kinesis/splitter.zip
       Handler: app.lambda_handler
       Runtime: python3.8
 

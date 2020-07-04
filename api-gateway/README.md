@@ -2,15 +2,46 @@
 
 
 ## What is in this repository
-This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
-
+This project contains a template file for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
 
 - template.yaml - A template that defines the application's AWS resources.
 
 ## Goal
-The goal of this application is to create a Rest API Endpoint backed by API Gateway to send events to it. Upon receiving events, API Gateway calls Kinesis Stream's PutRecord API to ingest the events.
+The goal of this application is to create a Rest API Endpoint backed by API Gateway to allow caller to send events to it. Upon receiving events, API Gateway calls Kinesis Stream's PutRecord API to ingest the events.
 
 The AWS resources are defined in the `template.yaml` file in this project.
+
+## API Endpoint
+
+```
+PUT https://{rest-api-id}.execute-api.{aws-region}.amazonaws.com/prod/{kinesis-stream-name}
+```
+
+where:
+* rest-api-id: unique id for your Rest endpoint
+* aws-region: AWS region where endpoint is deployed
+* kinesis-stream-name: the Kinesis stream name which API Gateway will use to call PutRecord API on your stream
+
+**Sample Request**
+
+```
+{
+    "Data": {
+        "some-key": "somg-value",
+    },
+    "PartitionKey": "abcd"
+}
+```
+
+**Sample Reponse**
+
+```
+{
+    "SequenceNumber": "49608554733551962673590806990285906888635247475302596610",
+    "ShardId": "shardId-000000000000"
+}
+```
+
 
 ## Deploy the application
 
