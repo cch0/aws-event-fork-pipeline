@@ -1,0 +1,38 @@
+{
+    "Records": [
+      {
+        "eventVersion": "2.1",
+        "eventSource": "aws:s3",
+        "awsRegion": "us-west-2",
+        "eventTime": "2020-09-14T00:25:50.032Z",
+        "eventName": "ObjectCreated:Put",
+        "userIdentity": {
+          "principalId": "AWS:AROA5A44PKRNDOJ6G3M6M:message-storage-us-west-2-xxx"
+        },
+        "requestParameters": {
+          "sourceIPAddress": "52.42.xxx.xx"
+        },
+        "responseElements": {
+          "x-amz-request-id": "F2811C957C7CFBC1",
+          "x-amz-id-2": "FOKPkMlf7qminjQF3XecgPdlwHXeZ81GZ5ETK4rvt0hyKYy/jCKqyPJTPG79eOEl/aaA8sa32cjOzx4m4EcT1qQvModqpk3y"
+        },
+        "s3": {
+          "s3SchemaVersion": "1.0",
+          "configurationId": "332d8034-16fa-4938-a1c9-df326a6e0b24",
+          "bucket": {
+            "name": "message-storage-us-west-2-xxx",
+            "ownerIdentity": {
+              "principalId": "A3PNBLZYBTZL8M"
+            },
+            "arn": "arn:aws:s3:::message-storage-us-west-2-xxx"
+          },
+          "object": {
+            "key": "raw/2020/09/14/50f0a355-3c71-4ca0-8398-fa54e5b0b351",
+            "size": 3,
+            "eTag": "15de21c670ae7c3f6f3f1f37029303c9",
+            "sequencer": "005F5EB8910A92D2CB"
+          }
+        }
+      }
+    ]
+  }

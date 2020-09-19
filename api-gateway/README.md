@@ -1,5 +1,6 @@
 # api-gateway-kinesis-stream
 
+![diagram](img/api_gateway_kinesis.png)
 
 ## What is in this repository
 This project contains a template file for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.

@@ -1,6 +1,6 @@
-# kinesis-data-and-firehose-process-record-s3
+# sqs-lambda-s3-lambda-sns
 
-![diagram](img/kinesis_lambda_s3.png)
+![diagram](img/sqs-lambda-s3-sns.png)
 
 ## Prerequisites
 
@@ -11,20 +11,22 @@
 ## What is in this repository
 This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
 
-- splitter - Code for the application's Lambda function and it's job is to split the event records in a batch by adding a newline character to the end so that when events are stored in the S3, each event record occupies one line.
+- storage - Code for the application's Lambda function and it's job is to process message
+arriving at SQS queue and store it to a S3 bucket
+- notification - Code for application's Lambda function and it's job is to process event resulting from files arriving at S3 bucket and publish message to SNS topic
 - events - Invocation events that you can use to invoke the function.
-- tests - Unit tests for the application code. 
 - template.yaml - A template that defines the application's AWS resources.
 
 ## Goal
-The goal of this application is to build an event process pipeline starting from Kinesis Data Stream and using Firehose Delivery Stream to eventually store data in a S3 Bucket.
+The goal of this application is to build an event process pipeline to be triggered when ever
+a message arrives on a SQS queue or DLQ. Message is permanently stored in S3 and notification
+is sent out to interested recipients.
 
-- Kinesis Data Stream - which you can send events to using API Gateway
-- Kinesis Firehose Delivery Stream - which functions as the consumer of data stream and receives event data
-- S3 bucket - where event records are permamently stored
-- Lambda function - performs source transformation before storing data into S3
+- Storage Lambda - to be triggered when a message arrives at SQS queue
+- S3 bucket - where message is permamently stored
+- Notification Lambda - process event notification from S3 and publish message to SNS topic
 
-The application uses several AWS resources, including Lambda functions, Kinesis Data and Firehose Streams and S3 Bucket. These resources are defined in the `template.yaml` file in this project. You can update the template to add AWS resources through the same deployment process that updates your application code.
+The application uses several AWS resources, including Lambda functions, S3 and SNS Topic. These resources are defined in the `template.yaml` file in this project. You can update the template to add AWS resources through the same deployment process that updates your application code.
 
 If you prefer to use an integrated development environment (IDE) to build and test your application, you can use the AWS Toolkit.  
 The AWS Toolkit is an open source plug-in for popular IDEs that uses the SAM CLI to build and deploy serverless applications on AWS. The AWS Toolkit also adds a simplified step-through debugging experience for Lambda function code. 
@@ -52,14 +54,12 @@ Build your application with the `sam build ` command.
 $ sam build
 ```
 
-The SAM CLI installs dependencies defined in `splitter/requirements.txt`, creates a deployment package, and saves it in the `.aws-sam/build` folder.
-
-Test a single function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are included in the `events` folder in this project.
+The SAM CLI installs dependencies defined in `storage/requirements.txt` and `notification/requirements.txt` , creates a deployment package, and saves it in the `.aws-sam/build` folder.
 
 Run functions locally and invoke them with the `sam local invoke` command.
 
 ```bash
->$ sam local invoke SplitterFunction --event events/event.json
+>$ sam local invoke MessageStorageFunction --event events/sqs-message-event.json
 ```
 
 
@@ -73,19 +73,11 @@ To simplify troubleshooting, SAM CLI has a command called `sam logs`. `sam logs`
 `NOTE`: This command works for all AWS Lambda functions; not just the ones you deploy using SAM.
 
 ```bash
-$ sam logs -n SplitterFunction --stack-name $STACK_NAME --tail
+$ sam logs -n MessageStorageFunction --stack-name $STACK_NAME --tail
 ```
 
 You can find more information and examples about filtering Lambda function logs in the [SAM CLI Documentation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-logging.html).
 
-## Unit tests
-
-Tests are defined in the `tests` folder in this project. Use PIP to install the [pytest](https://docs.pytest.org/en/latest/) and run unit tests.
-
-```bash
-$ pip3 install pytest pytest-mock --user
-$ python3 -m pytest tests/ -v
-```
 
 ## Cleanup
 
