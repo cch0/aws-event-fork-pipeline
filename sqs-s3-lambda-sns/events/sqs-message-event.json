@@ -1,0 +1,20 @@
+{
+    "Records": [
+      {
+        "messageId": "50f0a355-3c71-4ca0-8398-fa54e5b0b351",
+        "receiptHandle": "AQEBVp1ZC5o9XTQOKTyJHVLHgl373EUWRpj1RX5BBgqObHD8n5fC6YFuA3fB2KW8eMMOoq411Xa45JiBEi9kTbeLka4ZxOPif0BSGKVH3URLifuzUEjJk3/kulCRuDS079HNbpcJOtj3AZuBnyh1Jcdd3TkGBol7yBeDJeim6p/XFfIZz/cpjXkFb6St9XLTzmzdYTsbEsgaGfASsokx275J8kRPX/0IfCiGiISiRPqeUH9LPxp8h+Ge2ylWPGPmJUKmzxrUcxEGjgOulyIRV2ETQ+2H7LWAAa8WeKpMsHbAQ7C5dey8gr9y6MIyvBD5CiBcUk1aLj+WspFWKgvi/diuXh96175jrJOyynp0Q7ussmVsZxBQAyrWqGAiEe5kq5Km",
+        "body": "555",
+        "attributes": {
+          "ApproximateReceiveCount": "1",
+          "SentTimestamp": "1600043152814",
+          "SenderId": "8952919706xx",
+          "ApproximateFirstReceiveTimestamp": "1600043152815"
+        },
+        "messageAttributes": {},
+        "md5OfBody": "15de21c670ae7c3f6f3f1f37029303c9",
+        "eventSource": "aws:sqs",
+        "eventSourceARN": "arn:aws:sqs:us-west-2:895291970xxx:sqsxx",
+        "awsRegion": "us-west-2"
+      }
+    ]
+  }

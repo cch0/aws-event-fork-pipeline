@@ -11,8 +11,8 @@ def kinesis_event():
 
     return {
   "invocationId": "dcd4ac4b-f92d-4b30-8639-b18150adb13e",
-  "sourceKinesisStreamArn": "arn:aws:kinesis:us-west-2:484559884317:stream/activity",
-  "deliveryStreamArn": "arn:aws:firehose:us-west-2:484559884317:deliverystream/activity-to-s3",
+  "sourceKinesisStreamArn": "arn:aws:kinesis:us-west-2:48455988xxxx:stream/activity",
+  "deliveryStreamArn": "arn:aws:firehose:us-west-2:48455988xxxx:deliverystream/activity-to-s3",
   "region": "us-west-2",
   "records": [
     {
