@@ -1,5 +1,7 @@
 # sqs-lambda-s3-lambda-sns
 
+![diagram](img/sqs-lambda-s3-sns.png)
+
 ## Prerequisites
 
 - Python 3

@@ -1,5 +1,7 @@
 # kinesis-data-and-firehose-process-record-s3
 
+![diagram](img/kinesis_lambda_s3.png)
+
 ## Prerequisites
 
 - Python 3
