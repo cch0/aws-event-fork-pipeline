@@ -1,4 +1,4 @@
-# AWS Serverless Application Model Examples
+# AWS Event Fork Pipeline Using Serverless Application Model
 
 This repository contains a collection of event fork pipeline examples for various scenarios
 
